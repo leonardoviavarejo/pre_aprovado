@@ -1,0 +1,33 @@
+{
+  "properties": {
+    "type": "ScheduleTrigger",
+    "typeProperties": {
+      "recurrence": {
+        "frequency": <<Minute, Hour, Day, Week, Year>>,
+        "interval": <<int>>, // How often to fire
+        "startTime": <<datetime>>,
+        "endTime": <<datetime>>,
+        "timeZone": "UTC",
+        "schedule": { // Optional (advanced scheduling specifics)
+          "hours": [<<0-24>>],
+          "weekDays": [<<Monday-Sunday>>],
+          "minutes": [<<0-60>>],
+          "monthDays": [<<1-31>>],
+          "monthlyOccurrences": [
+            {
+              "day": <<Monday-Sunday>>,
+              "occurrence": <<1-5>>
+            }
+          ]
+        }
+      }
+    },
+  "pipelines": [
+    {
+      "pipelineReference": {
+        "type": "PipelineReference",
+        "referenceName": "<Name of your pipeline>"
+      }
+    }
+  ]}
+}

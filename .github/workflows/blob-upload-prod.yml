@@ -1,0 +1,17 @@
+name: Upload Master Branch to Azure Blob Storage
+on:
+  push:
+    branches:
+      - master
+jobs:
+  upload:
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v2
+      - uses: bacongobbler/azure-blob-storage-upload@v1.1.1
+        with:
+          source_dir: '.'
+          extra_args: '--destination-path projects/prod/pre_aprovado'
+          container_name: ${{ secrets.PLATAFORMA_ML_BLOB_CONTAINER }}
+          connection_string: ${{ secrets.PLATAFORMA_ML_BLOB_STR }}          
+          sync: false

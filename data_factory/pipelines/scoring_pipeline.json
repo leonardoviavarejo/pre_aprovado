@@ -1,0 +1,162 @@
+{
+    "name": "scoring",
+    "properties": {
+        "activities": [
+            {
+                "name": "ETL",
+                "type": "DatabricksSparkPython",
+                "dependsOn": [
+                    {
+                        "activity": "Wait for Databricks Cluster",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "policy": {
+                    "timeout": "7.00:00:00",
+                    "retry": 0,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "userProperties": [],
+                "typeProperties": {
+                    "pythonFile": "dbfs:/mnt/gen2ds/app/projects/prod/pre_aprovado/src/data_prep/predict/create_abt.py",
+                    "parameters": []
+                },
+                "linkedServiceName": {
+                    "referenceName": "AzureDatabricksdsdbsworkspace",
+                    "type": "LinkedServiceReference"
+                }
+            },
+            {
+                "name": "Scoring",
+                "type": "DatabricksSparkPython",
+                "dependsOn": [
+                    {
+                        "activity": "ETL",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "policy": {
+                    "timeout": "7.00:00:00",
+                    "retry": 0,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "userProperties": [],
+                "typeProperties": {
+                    "pythonFile": "dbfs:/mnt/gen2ds/app/projects/prod/pre_aprovado/src/ml/predict/scoring.py",
+                    "parameters": []
+                },
+                "linkedServiceName": {
+                    "referenceName": "AzureDatabricksdsdbsworkspace",
+                    "type": "LinkedServiceReference"
+                }
+            },
+            {
+                "name": "Wait for Databricks Cluster",
+                "type": "Wait",
+                "dependsOn": [
+                    {
+                        "activity": "Start Databricks Cluster",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "userProperties": [],
+                "typeProperties": {
+                    "waitTimeInSeconds": 300
+                }
+            },
+            {
+                "name": "Start Databricks Cluster",
+                "type": "WebActivity",
+                "dependsOn": [
+                    {
+                        "activity": "Start IR VM",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "policy": {
+                    "timeout": "7.00:00:00",
+                    "retry": 0,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "userProperties": [],
+                "typeProperties": {
+                    "url": "https://f439489f-0a15-40d0-b993-79dee468ada8.webhook.eus2.azure-automation.net/webhooks?token=eRCrfVo8d8YXAU6qQmdk8THVuOFQo%2fkUA9TLpMUhOZA%3d",
+                    "connectVia": {
+                        "referenceName": "integrationRuntimeSelfHostedVM",
+                        "type": "IntegrationRuntimeReference"
+                    },
+                    "method": "POST",
+                    "body": {
+                        "cluster_id": "0910-125405-nerdy860",
+                        "acess_token": "dapi3a8b50221d1f678fe9132836f2fb6635"
+                    }
+                }
+            },
+            {
+                "name": "Start IR VM",
+                "type": "WebHook",
+                "dependsOn": [],
+                "userProperties": [],
+                "typeProperties": {
+                    "url": "https://f439489f-0a15-40d0-b993-79dee468ada8.webhook.eus2.azure-automation.net/webhooks?token=8%2beQ1IsLHVZ%2baSS897oxTMBxxG3zYPlGzHuBIEIePLg%3d",
+                    "method": "POST",
+                    "headers": {
+                        "StartedBy": "Azure_VV_analyticsEngineer"
+                    },
+                    "body": {
+                        "Component": "VM",
+                        "ComponentName": "vm-adf-IntegrationRuntime-prd",
+                        "Action": "START"
+                    },
+                    "timeout": "00:15:00"
+                }
+            },
+            {
+                "name": "Stop IR VM",
+                "type": "WebHook",
+                "dependsOn": [
+                    {
+                        "activity": "Scoring",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "userProperties": [],
+                "typeProperties": {
+                    "url": "https://f439489f-0a15-40d0-b993-79dee468ada8.webhook.eus2.azure-automation.net/webhooks?token=8%2beQ1IsLHVZ%2baSS897oxTMBxxG3zYPlGzHuBIEIePLg%3d",
+                    "method": "POST",
+                    "headers": {
+                        "StartedBy": "Azure_VV_analyticsEngineer"
+                    },
+                    "body": {
+                        "Component": "VM",
+                        "ComponentName": "vm-adf-IntegrationRuntime-prd",
+                        "Action": "STOP"
+                    },
+                    "timeout": "00:15:00"
+                }
+            }
+        ],
+        "folder": {
+            "name": "ML/pre_aprovado"
+        },
+        "annotations": [],
+        "lastPublishTime": "2020-09-30T12:45:14Z"
+    },
+    "type": "Microsoft.DataFactory/factories/pipelines"
+}
